@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080a12">
+  <meta name="description" content="Joue à un clone de Geometry Dash directement dans ton navigateur.">
+  <title>Geometry Dash — Le défi commence ici</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a12;
+      --panel: #111522;
+      --panel-light: #171c2c;
+      --text: #f4f6fb;
+      --muted: #9ba4b7;
+      --line: rgba(255, 255, 255, 0.1);
+      --lime: #d7ff3f;
+      --orange: #f5a623;
+      --cyan: #3edfff;
+      --red: #ff5e69;
+      --font: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 10% 10%, rgba(110, 74, 255, 0.13), transparent 34rem),
+        radial-gradient(ellipse at 90% 45%, rgba(53, 194, 255, 0.07), transparent 27rem),
+        var(--bg);
+      font-family: var(--font);
+      line-height: 1.6;
+    }
+
+    body::selection {
+      color: #111;
+      background: var(--lime);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    canvas:focus-visible {
+      outline: 2px solid var(--lime);
+      outline-offset: 4px;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    section[id] {
+      scroll-margin-top: 95px;
+    }
+
+    .site-header {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 10, 18, 0.86);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-row {
+      position: relative;
+      display: flex;
+      min-height: 74px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 11px;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+    }
+
+    .brand-cube {
+      position: relative;
+      display: block;
+      width: 31px;
+      height: 31px;
+      transform: rotate(-8deg);
+      border: 2px solid #fff2c0;
+      border-radius: 6px;
+      background: linear-gradient(145deg, #ffd757, var(--orange));
+      box-shadow: 0 0 20px rgba(245, 166, 35, 0.4);
+    }
+
+    .brand-cube::before,
+    .brand-cube::after {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.7);
+      content: "";
+    }
+
+    .brand-cube::before {
+      top: 6px;
+      left: 7px;
+      width: 14px;
+      height: 2px;
+    }
+
+    .brand-cube::after {
+      top: 6px;
+      left: 7px;
+      width: 2px;
+      height: 14px;
+    }
+
+    .brand-name {
+      display: grid;
+      line-height: 1.05;
+    }
+
+    .brand-name strong {
+      font-size: 1rem;
+    }
+
+    .brand-name small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.59rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+    }
+
+    .brand-name strong span {
+      color: var(--lime);
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 27px;
+    }
+
+    .nav-menu a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+      transition: color 0.2s ease;
+    }
+
+    .nav-menu a:hover {
+      color: var(--text);
+    }
+
+    .button,
+    .header-play {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 16px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .button:hover,
+    .header-play:hover {
+      transform: translateY(-2px);
+    }
+
+    .button-primary,
+    .header-play {
+      color: #11150a;
+      background: var(--lime);
+    }
+
+    .button-primary:hover,
+    .header-play:hover {
+      background: #e4ff85;
+    }
+
+    .button-secondary,
+    .button-outline {
+      border-color: var(--line);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .button-secondary:hover,
+    .button-outline:hover:not(:disabled) {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .header-play {
+      min-height: 40px;
+      padding-inline: 14px;
+      font-size: 0.84rem;
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--text);
+      background: var(--panel);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .hero {
+      display: grid;
+      min-height: 590px;
+      padding-block: 76px;
+      grid-template-columns: 0.95fr 1.05fr;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 17px;
+      color: var(--lime);
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .signal {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 14px var(--lime);
+      animation: pulse 1.7s infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.5;
+        box-shadow: 0 0 4px var(--lime);
+      }
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.05;
+    }
+
+    .hero h1 {
+      margin-bottom: 20px;
+      font-size: clamp(3.2rem, 7vw, 5.8rem);
+      font-weight: 900;
+      letter-spacing: -0.09em;
+      line-height: 0.94;
+    }
+
+    .hero h1 span {
+      color: var(--lime);
+    }
+
+    .hero-copy > p:not(.eyebrow) {
+      max-width: 480px;
+      margin-bottom: 27px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 11px;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 27px;
+      margin-top: 33px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .hero-stat {
+      display: grid;
+      gap: 2px;
+    }
+
+    .hero-stat strong {
+      font-size: 1.15rem;
+    }
+
+    .hero-stat span {
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+    }
+
+    .preview-stage {
+      position: relative;
+      min-height: 405px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 23px;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(86, 68, 171, 0.32), transparent 55%),
+        linear-gradient(145deg, #151a2c, #0b0e19 75%);
+      isolation: isolate;
+    }
+
+    .preview-stage::before {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 35px 35px;
+      content: "";
+      mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 82%, transparent);
+    }
+
+    .preview-stage::after {
+      position: absolute;
+      right: 0;
+      bottom: 62px;
+      left: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      box-shadow: 0 0 22px var(--cyan);
+      content: "";
+    }
+
+    .stage-label {
+      position: absolute;
+      z-index: 2;
+      top: 19px;
+      left: 19px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--lime);
+      background: rgba(8, 10, 18, 0.55);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .stage-record {
+      position: absolute;
+      z-index: 2;
+      top: 19px;
+      right: 19px;
+      display: grid;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(8, 10, 18, 0.55);
+      text-align: right;
+    }
+
+    .stage-record small {
+      color: var(--muted);
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .stage-record strong {
+      color: var(--orange);
+      font-size: 0.9rem;
+    }
+
+    .stage-cube {
+      position: absolute;
+      z-index: 2;
+      top: 45%;
+      left: 47%;
+      width: 76px;
+      height: 76px;
+      transform: translate(-50%, -50%) rotate(14deg);
+      border: 3px solid #fff3c2;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #ffd85d, #ff9b1d 80%);
+      box-shadow:
+        0 0 24px rgba(245, 166, 35, 0.7),
+        0 0 80px rgba(245, 166, 35, 0.2);
+      animation: cube-float 2.5s ease-in-out infinite;
+    }
+
+    .stage-cube::before,
+    .stage-cube::after {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.48);
+      content: "";
+    }
+
+    .stage-cube::before {
+      top: 17px;
+      left: 17px;
+      width: 36px;
+      height: 2px;
+    }
+
+    .stage-cube::after {
+      top: 17px;
+      left: 17px;
+      width: 2px;
+      height: 36px;
+    }
+
+    @keyframes cube-float {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -11px; }
+    }
+
+    .stage-spike {
+      position: absolute;
+      z-index: 1;
+      right: 17%;
+      bottom: 62px;
+      width: 48px;
+      height: 54px;
+      background: var(--red);
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+      filter: drop-shadow(0 0 12px rgba(255, 94, 105, 0.7));
+    }
+
+    .stage-platform {
+      position: absolute;
+      right: 5%;
+      bottom: 62px;
+      width: 25%;
+      height: 12px;
+      border: 1px solid var(--cyan);
+      background: linear-gradient(90deg, #167b9b, var(--cyan));
+      box-shadow: 0 0 15px rgba(62, 223, 255, 0.6);
+    }
+
+    .stage-caption {
+      position: absolute;
+      bottom: 19px;
+      left: 20px;
+      color: #c3c9d8;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+
+    .section {
+      padding-block: 76px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 25px;
+    }
+
+    .section-heading .eyebrow {
+      margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+      margin-bottom: 0;
+      font-size: clamp(2rem, 4.2vw, 3.15rem);
+      letter-spacing: -0.07em;
+    }
+
+    .section-heading h2 span {
+      color: var(--lime);
+    }
+
+    .section-heading > p {
+      max-width: 360px;
+      margin: 0 0 3px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .game-frame {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 19px;
+      background: #0b0e17;
+      box-shadow: 0 22px 80px rgba(0, 0, 0, 0.27);
+    }
+
+    .game-topbar {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #111522;
+    }
+
+    .game-window {
+      display: flex;
+      gap: 6px;
+    }
+
+    .game-window i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff6470;
+    }
+
+    .game-window i:nth-child(2) {
+      background: #ffca55;
+    }
+
+    .game-window i:nth-child(3) {
+      background: #55dc8b;
+    }
+
+    .game-title {
+      color: #c9cfdd;
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+
+    .status-pill {
+      min-width: 91px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-align: center;
+    }
+
+    .status-playing {
+      border-color: rgba(215, 255, 63, 0.3);
+      color: var(--lime);
+      background: rgba(215, 255, 63, 0.07);
+    }
+
+    .status-paused {
+      border-color: rgba(62, 223, 255, 0.3);
+      color: var(--cyan);
+      background: rgba(62, 223, 255, 0.07);
+    }
+
+    .status-dead {
+      border-color: rgba(255, 94, 105, 0.3);
+      color: var(--red);
+      background: rgba(255, 94, 105, 0.07);
+    }
+
+    .canvas-wrap {
+      overflow: hidden;
+      background: #0a0a1a;
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .game-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 15px;
+      border-top: 1px solid var(--line);
+      background: #10131e;
+    }
+
+    .score-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .score-box {
+      display: grid;
+      min-width: 106px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .score-box small {
+      color: var(--muted);
+      font-size: 0.59rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .score-box strong {
+      font-size: 1rem;
+    }
+
+    .score-box.record strong {
+      color: var(--lime);
+    }
+
+    .game-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .game-buttons .button {
+      min-height: 39px;
+      padding-inline: 12px;
+      font-size: 0.8rem;
+    }
+
+    .game-note {
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-align: center;
+    }
+
+    .game-note strong {
+      color: var(--text);
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .rule-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: linear-gradient(140deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+    }
+
+    .rule-icon {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      margin-bottom: 17px;
+      place-items: center;
+      border: 1px solid rgba(215, 255, 63, 0.25);
+      border-radius: 10px;
+      color: var(--lime);
+      background: rgba(215, 255, 63, 0.07);
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+
+    .rule-card h3 {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .rule-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .rules-key {
+      display: inline-flex;
+      margin-top: 14px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: #e5e9f3;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .about-section {
+      padding-top: 0;
+    }
+
+    .about-box {
+      display: grid;
+      padding: 32px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 26px;
+      border: 1px solid rgba(62, 223, 255, 0.17);
+      border-radius: 18px;
+      background:
+        radial-gradient(ellipse at 95% 5%, rgba(62, 223, 255, 0.1), transparent 35%),
+        #10131e;
+    }
+
+    .about-box .eyebrow {
+      margin-bottom: 9px;
+      color: var(--cyan);
+    }
+
+    .about-box h2 {
+      margin-bottom: 9px;
+      font-size: clamp(1.6rem, 3.6vw, 2.35rem);
+      letter-spacing: -0.06em;
+    }
+
+    .about-box p:last-child {
+      max-width: 730px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .about-mark {
+      display: grid;
+      width: 67px;
+      height: 67px;
+      place-items: center;
+      border: 1px solid rgba(62, 223, 255, 0.25);
+      border-radius: 18px;
+      color: var(--cyan);
+      background: rgba(62, 223, 255, 0.07);
+      font-size: 1.8rem;
+      font-weight: 900;
+      transform: rotate(-6deg);
+    }
+
+    .site-footer {
+      margin-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-inner {
+      display: flex;
+      min-height: 90px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 17px;
+    }
+
+    .footer-inner p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.73rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 17px;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 800px) {
+      .hero {
+        min-height: unset;
+        padding-block: 60px;
+        grid-template-columns: 1fr;
+        gap: 35px;
+      }
+
+      .preview-stage {
+        min-height: 350px;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .section-heading > p {
+        max-width: 560px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .container {
+        width: calc(100% - 30px);
+      }
+
+      .nav-row {
+        min-height: 66px;
+      }
+
+      .menu-toggle {
+        display: grid;
+        margin-left: auto;
+      }
+
+      .header-play {
+        display: none;
+      }
+
+      .nav-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: 0;
+        display: none;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: #111522;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .nav-menu.is-open {
+        display: flex;
+      }
+
+      .nav-menu a {
+        padding: 12px;
+      }
+
+      .hero h1 {
+        font-size: clamp(3rem, 14vw, 5rem);
+      }
+
+      .section {
+        padding-block: 58px;
+      }
+
+      .rules-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .rule-card {
+        padding: 18px;
+      }
+
+      .rule-icon {
+        margin-bottom: 12px;
+      }
+
+      .about-box {
+        padding: 23px;
+        grid-template-columns: 1fr;
+      }
+
+      .about-mark {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-stats {
+        gap: 17px;
+      }
+
+      .preview-stage {
+        min-height: 290px;
+      }
+
+      .stage-cube {
+        width: 62px;
+        height: 62px;
+      }
+
+      .game-topbar {
+        padding-inline: 11px;
+      }
+
+      .game-title {
+        font-size: 0.62rem;
+      }
+
+      .game-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .score-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .game-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .game-buttons .button {
+        width: 100%;
+      }
+
+      .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        padding-block: 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="#accueil" aria-label="Geometry Dash, accueil">
+        <span class="brand-cube" aria-hidden="true"></span>
+        <span class="brand-name">
+          <strong>GEOMETRY <span>DASH</span></strong>
+          <small>CLONE ARCADE</small>
+        </span>
+      </a>
+
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        type="button"
+        aria-label="Ouvrir le menu"
+        aria-expanded="false"
+      >☰</button>
+
+      <nav class="nav-menu" id="navMenu" aria-label="Navigation principale">
+        <a href="#jeu">Jouer</a>
+        <a href="#commandes">Commandes</a>
+        <a href="#apropos">À propos</a>
+      </nav>
+
+      <a class="header-play" href="#jeu">▶ Jouer maintenant</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="container hero" id="accueil">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="signal"></span> Un clone arcade jouable dans ton navigateur</p>
+        <h1>UN CUBE.<br><span>UN SAUT.</span><br>UN RECORD.</h1>
+        <p>
+          Saute par-dessus les pics, évite les blocs et tente de battre ton record.
+          Deux sauts, des obstacles aléatoires : jusqu’où iras-tu ?
+        </p>
+
+        <div class="hero-actions">
+          <a class="button button-primary" href="#jeu">Lancer le niveau <span aria-hidden="true">↘</span></a>
+          <a class="button button-secondary" href="#commandes">Voir les commandes</a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <strong>2×</strong>
+            <span>SAUTS MAXIMUM</span>
+          </div>
+          <div class="hero-stat">
+            <strong>∞</strong>
+            <span>NIVEAU SANS FIN</span>
+          </div>
+          <div class="hero-stat">
+            <strong id="heroBest">0</strong>
+            <span>TON RECORD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-stage" aria-label="Illustration du cube et des obstacles du jeu">
+        <span class="stage-label">NIVEAU 001 · MODE ARCADE</span>
+        <div class="stage-record">
+          <small>RECORD LOCAL</small>
+          <strong id="heroRecord">0</strong>
+        </div>
+        <div class="stage-cube" aria-hidden="true"></div>
+        <div class="stage-spike" aria-hidden="true"></div>
+        <div class="stage-platform" aria-hidden="true"></div>
+        <span class="stage-caption">SAUTE · ÉVITE · RECOMMENCE</span>
+      </div>
+    </section>
+
+    <section class="container section" id="jeu">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Le niveau est prêt</p>
+          <h2>À toi de <span>jouer.</span></h2>
+        </div>
+        <p>Tu peux jouer au clavier, à la souris ou en touchant l’écran.</p>
+      </div>
+
+      <div class="game-frame">
+        <div class="game-topbar">
+          <div class="game-window" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="game-title">GEOMETRY DASH · WEB EDITION</span>
+          <span class="status-pill status-menu" id="gameStatus" aria-live="polite">MENU</span>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas
+            id="gameCanvas"
+            width="800"
+            height="450"
+            tabindex="0"
+            aria-label="Jeu Geometry Dash. Clique ou appuie sur Espace pour jouer et sauter."
+          >
+            Ton navigateur ne prend pas en charge Canvas.
+          </canvas>
+        </div>
+
+        <div class="game-toolbar">
+          <div class="score-group">
+            <div class="score-box">
+              <small>Score</small>
+              <strong id="scoreValue">0</strong>
+            </div>
+            <div class="score-box record">
+              <small>Meilleur score</small>
+              <strong id="bestValue">0</strong>
+            </div>
+          </div>
+
+          <div class="game-buttons">
+            <button class="button button-primary" id="startButton" type="button">▶ Lancer le niveau</button>
+            <button class="button button-outline" id="pauseButton" type="button" disabled>Ⅱ Pause</button>
+            <button class="button button-outline" id="restartButton" type="button">↻ Recommencer</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="game-note">
+        <strong>ESPACE / CLIC / TOUCHER</strong> pour sauter ·
+        <strong>P</strong> ou <strong>ÉCHAP</strong> pour mettre en pause ·
+        <strong>R</strong> pour recommencer
+      </p>
+    </section>
+
+    <section class="container section" id="commandes">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Comment survivre</p>
+          <h2>Simple à jouer.<br><span>Dur à maîtriser.</span></h2>
+        </div>
+        <p>Apprends les commandes, repère les obstacles et garde le bon rythme.</p>
+      </div>
+
+      <div class="rules-grid">
+        <article class="rule-card">
+          <div class="rule-icon" aria-hidden="true">↑</div>
+          <h3>Saute au bon moment</h3>
+          <p>Appuie sur Espace, clique ou touche l’écran pour faire sauter le cube.</p>
+          <span class="rules-key">ESPACE · CLIC · TOUCHER</span>
+        </article>
+
+        <article class="rule-card">
+          <div class="rule-icon" aria-hidden="true">2×</div>
+          <h3>Utilise le double saut</h3>
+          <p>Tu peux sauter deux fois avant de retoucher le sol ou une plateforme.</p>
+          <span class="rules-key">2 SAUTS MAXIMUM</span>
+        </article>
+
+        <article class="rule-card">
+          <div class="rule-icon" aria-hidden="true">↻</div>
+          <h3>Repars à l’attaque</h3>
+          <p>Un obstacle t’a eu ? Relance une partie et essaie de dépasser ton record.</p>
+          <span class="rules-key">R = RECOMMENCER · P = PAUSE</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="container section about-section" id="apropos">
+      <div class="about-box">
+        <div>
+          <p class="eyebrow">À propos du projet</p>
+          <h2>Ton jeu, adapté pour le web.</h2>
+          <p>
+            Ton code d’origine utilise Python et Pygame. Un navigateur ne peut pas exécuter
+            directement ce fichier Python : le jeu intégré à cette page reprend donc sa
+            logique en JavaScript et Canvas. Pour lancer la version Python originale,
+            utilise toujours la commande <strong>python geometry_dash.py</strong>.
+            Projet fan non officiel.
+          </p>
+        </div>
+        <div class="about-mark" aria-hidden="true">GD</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <a class="brand" href="#accueil">
+        <span class="brand-cube" aria-hidden="true"></span>
+        <span class="brand-name">
+          <strong>GEOMETRY <span>DASH</span></strong>
+          <small>CLONE ARCADE</small>
+        </span>
+      </a>
+      <p>Un petit clone arcade créé à partir de ton idée de jeu.</p>
+      <nav class="footer-links" aria-label="Liens de bas de page">
+        <a href="#jeu">Jouer</a>
+        <a href="#commandes">Commandes</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // Dimensions de la zone de jeu, indépendantes de la taille de l'écran.
+    const W = 800;
+    const H = 450;
+    const FPS = 60;
+    const GROUND = H - 70;
+    const CS = 38;
+    const GRAVITY = 0.65;
+    const JUMP_VY = -14;
+    const MAX_JUMPS = 2;
+    const FRAME_MS = 1000 / FPS;
+
+    const COLORS = {
+      background: "#0a0a1a",
+      ground: "#1a1a3a",
+      groundLine: "#2a2a5a",
+      cube: "#f5a623",
+      cubeBorder: "#ff7b00",
+      spike: "#e74c3c",
+      spikeHighlight: "#ff8888",
+      block: "#3498db",
+      blockHighlight: "#5dade2",
+      platformTop: "#3ecfff",
+      platformBottom: "#1a80aa",
+      white: "#ffffff",
+      score: "#f5a623",
+      death: "#e74c3c"
+    };
+
+    const canvas = document.querySelector("#gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const ui = {
+      status: document.querySelector("#gameStatus"),
+      score: document.querySelector("#scoreValue"),
+      best: document.querySelector("#bestValue"),
+      heroBest: document.querySelector("#heroBest"),
+      heroRecord: document.querySelector("#heroRecord"),
+      start: document.querySelector("#startButton"),
+      pause: document.querySelector("#pauseButton")
+    };
+
+    function rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+      return !(ax + aw <= bx || ax >= bx + bw || ay + ah <= by || ay >= by + bh);
+    }
+
+    function pointInTriangle(px, py, obs) {
+      const tx = obs.x + obs.w / 2;
+      const ty = obs.y - obs.h;
+      const bottom = obs.y;
+
+      if (py < ty || py > bottom) return false;
+
+      const t = bottom === ty ? 0 : (py - ty) / (bottom - ty);
+      const halfWidth = (obs.w / 2) * t;
+
+      return px >= tx - halfWidth && px <= tx + halfWidth;
+    }
+
+    function spikeHit(playerY, playerX, obs) {
+      const margin = 7;
+      const left = playerX + margin;
+      const top = playerY + margin;
+      const width = CS - margin * 2;
+      const height = CS - margin * 2;
+
+      const corners = [
+        [left, top],
+        [left + width, top],
+        [left, top + height],
+        [left + width, top + height]
+      ];
+
+      return corners.some(([x, y]) => pointInTriangle(x, y, obs));
+    }
+
+    class Particle {
+      constructor(x, y, vx, vy, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.life = 1;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.15;
+        this.life -= 0.04;
+      }
+
+      draw(context) {
+        if (this.life <= 0) return;
+
+        context.save();
+        context.globalAlpha = Math.max(0, this.life);
+        context.fillStyle = this.color;
+        context.fillRect(this.x - 4, this.y - 4, 8, 8);
+        context.restore();
+      }
+    }
+
+    class Player {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = 140;
+        this.y = GROUND - CS;
+        this.vy = 0;
+        this.jumps = 0;
+        this.angle = 0;
+        this.trail = [];
+        this.onPlatform = false;
+      }
+
+      jump(particles) {
+        if (this.jumps >= MAX_JUMPS) return;
+
+        this.vy = JUMP_VY;
+        this.jumps += 1;
+        this.onPlatform = false;
+
+        for (let i = 0; i < 10; i++) {
+          particles.push(new Particle(
+            this.x + CS / 2,
+            this.y + CS,
+            Math.random() * 6 - 3,
+            Math.random() * 3 - 4,
+            COLORS.cube
+          ));
+        }
+      }
+
+      update() {
+        this.vy += GRAVITY;
+        this.y += this.vy;
+
+        if (this.y >= GROUND - CS) {
+          this.y = GROUND - CS;
+          this.vy = 0;
+          this.jumps = 0;
+          this.onPlatform = false;
+        }
+
+        if (this.y < GROUND - CS && !this.onPlatform) {
+          this.angle += 0.08;
+        } else {
+          const target = Math.round(this.angle / (Math.PI / 2)) * (Math.PI / 2);
+          this.angle += (target - this.angle) * 0.3;
+        }
+
+        this.trail.push([this.x + CS / 2, this.y + CS / 2]);
+        if (this.trail.length > 14) this.trail.shift();
+      }
+
+      draw(context) {
+        for (let i = 0; i < this.trail.length; i++) {
+          const [x, y] = this.trail[i];
+          const ratio = i / Math.max(this.trail.length, 1);
+          const size = Math.max(2, CS * 0.55 * ratio);
+
+          context.save();
+          context.globalAlpha = 0.24 * ratio;
+          context.fillStyle = COLORS.cube;
+          context.fillRect(x - size / 2, y - size / 2, size, size);
+          context.restore();
+        }
+
+        const centerX = this.x + CS / 2;
+        const centerY = this.y + CS / 2;
+
+        context.save();
+        context.translate(centerX, centerY);
+        context.rotate(-this.angle);
+
+        const gradient = context.createLinearGradient(-CS / 2, -CS / 2, CS / 2, CS / 2);
+        gradient.addColorStop(0, "#ffd35a");
+        gradient.addColorStop(1, COLORS.cube);
+
+        context.fillStyle = gradient;
+        context.fillRect(-CS / 2, -CS / 2, CS, CS);
+
+        context.strokeStyle = COLORS.cubeBorder;
+        context.lineWidth = 2;
+        context.strokeRect(-CS / 2, -CS / 2, CS, CS);
+
+        const inner = CS * 0.44;
+        context.strokeStyle = "rgba(255,255,255,0.45)";
+        context.lineWidth = 1;
+        context.strokeRect(-inner / 2, -inner / 2, inner, inner);
+
+        context.strokeStyle = "rgba(255,255,255,0.28)";
+        context.beginPath();
+        context.moveTo(-CS / 2, -CS / 2);
+        context.lineTo(CS / 2, CS / 2);
+        context.moveTo(CS / 2, -CS / 2);
+        context.lineTo(-CS / 2, CS / 2);
+        context.stroke();
+
+        context.restore();
+      }
+    }
+
+    function drawSpike(context, obs) {
+      const x = obs.x;
+      const y = obs.y;
+
+      context.save();
+      context.shadowColor = COLORS.spike;
+      context.shadowBlur = 16;
+      context.fillStyle = COLORS.spike;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + obs.w / 2, y - obs.h);
+      context.lineTo(x + obs.w, y);
+      context.closePath();
+      context.fill();
+
+      context.shadowBlur = 0;
+      context.strokeStyle = COLORS.spikeHighlight;
+      context.lineWidth = 1;
+      context.stroke();
+      context.restore();
+    }
+
+    function drawBlock(context, obs) {
+      context.fillStyle = COLORS.block;
+      context.fillRect(obs.x, obs.y, obs.w, obs.h);
+
+      context.strokeStyle = COLORS.blockHighlight;
+      context.lineWidth = 2;
+      context.strokeRect(obs.x, obs.y, obs.w, obs.h);
+
+      context.strokeStyle = "rgba(255,255,255,0.22)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(obs.x + obs.w / 2, obs.y);
+      context.lineTo(obs.x + obs.w / 2, obs.y + obs.h);
+      context.moveTo(obs.x, obs.y + obs.h / 2);
+      context.lineTo(obs.x + obs.w, obs.y + obs.h / 2);
+      context.stroke();
+    }
+
+    function drawPlatform(context, platform) {
+      const gradient = context.createLinearGradient(
+        0,
+        platform.y,
+        0,
+        platform.y + platform.h
+      );
+
+      gradient.addColorStop(0, COLORS.platformTop);
+      gradient.addColorStop(1, COLORS.platformBottom);
+
+      context.fillStyle = gradient;
+      context.fillRect(platform.x, platform.y, platform.w, platform.h);
+
+      context.strokeStyle = COLORS.platformTop;
+      context.lineWidth = 1;
+      context.strokeRect(platform.x, platform.y, platform.w, platform.h);
+
+      context.fillStyle = "rgba(255,255,255,0.3)";
+      context.fillRect(platform.x + 2, platform.y + 2, Math.max(1, platform.w - 4), 2);
+
+      context.strokeStyle = "rgba(255,255,255,0.18)";
+      for (let x = platform.x + 20; x < platform.x + platform.w; x += 20) {
+        context.beginPath();
+        context.moveTo(x, platform.y);
+        context.lineTo(x, platform.y + platform.h);
+        context.stroke();
+      }
+    }
+
+    class Game {
+      constructor() {
+        this.player = new Player();
+        this.state = "menu";
+        this.score = 0;
+        this.best = this.loadBest();
+        this.frame = 0;
+        this.speed = 5;
+        this.obstacles = [];
+        this.platforms = [];
+        this.particles = [];
+        this.nextSpawn = 90;
+        this.visualTick = 0;
+        this.stars = this.makeStars();
+
+        this.syncUI();
+      }
+
+      loadBest() {
+        try {
+          return Number(localStorage.getItem("geometry-dash-best") || 0);
+        } catch {
+          return 0;
+        }
+      }
+
+      saveBest() {
+        try {
+          localStorage.setItem("geometry-dash-best", String(this.best));
+        } catch {
+          // Le jeu reste jouable si le stockage local est indisponible.
+        }
+      }
+
+      makeStars() {
+        return Array.from({ length: 100 }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * (GROUND - 40),
+          r: 0.5 + Math.random() * 1.5,
+          blink: Math.random() * Math.PI * 2
+        }));
+      }
+
+      start() {
+        this.state = "playing";
+        this.frame = 0;
+        this.score = 0;
+        this.speed = 5;
+        this.obstacles = [];
+        this.platforms = [];
+        this.particles = [];
+        this.nextSpawn = 90;
+        this.player.reset();
+        this.syncUI();
+      }
+
+      action() {
+        if (this.state === "menu" || this.state === "dead") {
+          this.start();
+        } else if (this.state === "playing") {
+          this.player.jump(this.particles);
+        }
+      }
+
+      togglePause() {
+        if (this.state === "playing") {
+          this.state = "paused";
+          this.syncUI();
+        } else if (this.state === "paused") {
+          this.state = "playing";
+          this.syncUI();
+        }
+      }
+
+      syncUI() {
+        const labels = {
+          menu: "MENU",
+          playing: "EN JEU",
+          paused: "PAUSE",
+          dead: "GAME OVER"
+        };
+
+        ui.status.textContent = labels[this.state];
+        ui.status.className = `status-pill status-${this.state}`;
+        ui.score.textContent = String(this.score);
+        ui.best.textContent = String(this.best);
+        ui.heroBest.textContent = String(this.best);
+        ui.heroRecord.textContent = String(this.best);
+
+        if (this.state === "menu") {
+          ui.start.textContent = "▶ Lancer le niveau";
+        } else if (this.state === "dead") {
+          ui.start.textContent = "↻ Rejouer";
+        } else if (this.state === "paused") {
+          ui.start.textContent = "▶ Reprendre";
+        } else {
+          ui.start.textContent = "↑ Sauter";
+        }
+
+        ui.pause.disabled = this.state !== "playing" && this.state !== "paused";
+        ui.pause.textContent = this.state === "paused" ? "▶ Reprendre" : "Ⅱ Pause";
+      }
+
+      spawnChunk() {
+        const roll = Math.random();
+
+        if (roll < 0.28) {
+          const width = 80 + Math.floor(Math.random() * 3) * 30;
+          const y = GROUND - CS - 48 - Math.floor(Math.random() * 2) * CS;
+
+          this.platforms.push({ x: W + 20, y, w: width, h: 14 });
+
+          if (Math.random() > 0.5) {
+            this.obstacles.push({
+              type: "spike",
+              x: W + 20 + width / 2 - 12,
+              y,
+              w: 24,
+              h: 28
+            });
+          }
+        } else if (roll < 0.5) {
+          const width = 60 + Math.floor(Math.random() * 2) * 30;
+          const y = Math.floor(GROUND - CS - 52 - Math.random() * 36);
+
+          this.platforms.push({ x: W + 20, y, w: width, h: 14 });
+        } else if (roll < 0.72) {
+          const count = 1 + Math.floor(Math.random() * 3);
+
+          for (let i = 0; i < count; i++) {
+            this.obstacles.push({
+              type: "spike",
+              x: W + 20 + i * 28,
+              y: GROUND,
+              w: 24,
+              h: 30
+            });
+          }
+        } else if (roll < 0.88) {
+          const stacked = Math.random() > 0.5 ? 2 : 1;
+
+          for (let i = 0; i < stacked; i++) {
+            this.obstacles.push({
+              type: "block",
+              x: W + 20,
+              y: GROUND - CS * (i + 1),
+              w: CS,
+              h: CS
+            });
+          }
+        } else {
+          const y = GROUND - CS - 54;
+
+          this.platforms.push({ x: W + 20, y, w: 70, h: 14 });
+          this.obstacles.push({
+            type: "spike",
+            x: W + 80,
+            y: GROUND,
+            w: 24,
+            h: 30
+          });
+        }
+
+        this.nextSpawn = this.frame + Math.max(55, 90 - Math.floor(this.score * 0.04));
+      }
+
+      die() {
+        this.state = "dead";
+
+        if (this.score > this.best) {
+          this.best = this.score;
+          this.saveBest();
+        }
+
+        const centerX = this.player.x + CS / 2;
+        const centerY = this.player.y + CS / 2;
+
+        for (let i = 0; i < 24; i++) {
+          const angle = (Math.PI * 2 * i) / 24;
+          const speed = 2 + Math.random() * 4;
+
+          this.particles.push(new Particle(
+            centerX,
+            centerY,
+            Math.cos(angle) * speed,
+            Math.sin(angle) * speed,
+            COLORS.cube
+          ));
+        }
+
+        this.syncUI();
+      }
+
+      update() {
+        for (const particle of this.particles) particle.update();
+        this.particles = this.particles.filter(particle => particle.life > 0);
+
+        if (this.state !== "playing") return;
+
+        const previousScore = this.score;
+        this.frame += 1;
+        this.score = Math.floor(this.frame / 6);
+        this.speed = 5 + this.score * 0.003;
+
+        if (this.score !== previousScore) this.syncUI();
+
+        const previousY = this.player.y;
+        this.player.update();
+        this.player.onPlatform = false;
+
+        // Atterrissage sur les plateformes.
+        for (const platform of this.platforms) {
+          const overlap = rectOverlap(
+            this.player.x + 4,
+            this.player.y,
+            CS - 8,
+            CS,
+            platform.x,
+            platform.y,
+            platform.w,
+            platform.h
+          );
+
+          const above = previousY + CS <= platform.y + 4;
+
+          if (above && overlap && this.player.vy >= 0) {
+            this.player.y = platform.y - CS;
+            this.player.vy = 0;
+            this.player.jumps = 0;
+            this.player.onPlatform = true;
+          } else if (!above && overlap) {
+            this.die();
+            return;
+          }
+        }
+
+        // Déplacement des obstacles et du décor.
+        for (const obstacle of this.obstacles) obstacle.x -= this.speed;
+        for (const platform of this.platforms) platform.x -= this.speed;
+
+        this.obstacles = this.obstacles.filter(obstacle => obstacle.x > -100);
+        this.platforms = this.platforms.filter(platform => platform.x > -250);
+
+        for (const star of this.stars) {
+          star.x -= this.speed * 0.12;
+          if (star.x < 0) star.x = W;
+        }
+
+        if (this.frame >= this.nextSpawn) this.spawnChunk();
+
+        // Collisions avec les pics et les blocs.
+        const margin = 7;
+        const hitX = this.player.x + margin;
+        const hitY = this.player.y + margin;
+        const hitW = CS - margin * 2;
+        const hitH = CS - margin * 2;
+
+        for (const obstacle of this.obstacles) {
+          if (obstacle.type === "spike") {
+            if (spikeHit(this.player.y, this.player.x, obstacle)) {
+              this.die();
+              return;
+            }
+          } else {
+            const fromTop =
+              previousY + CS <= obstacle.y + 4 &&
+              this.player.vy >= 0 &&
+              rectOverlap(
+                hitX,
+                this.player.y,
+                hitW,
+                CS,
+                obstacle.x,
+                obstacle.y,
+                obstacle.w,
+                obstacle.h
+              );
+
+            if (fromTop) {
+              this.player.y = obstacle.y - CS;
+              this.player.vy = 0;
+              this.player.jumps = 0;
+            } else if (
+              rectOverlap(
+                hitX,
+                hitY,
+                hitW,
+                hitH,
+                obstacle.x,
+                obstacle.y,
+                obstacle.w,
+                obstacle.h
+              )
+            ) {
+              this.die();
+              return;
+            }
+          }
+        }
+      }
+
+      drawOverlay(title, subtitle, color, extra = "") {
+        ctx.fillStyle = "rgba(3, 5, 13, 0.72)";
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = color;
+        ctx.font = "900 42px Arial, sans-serif";
+        ctx.fillText(title, W / 2, H / 2 - 39);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = COLORS.white;
+        ctx.font = "500 18px Arial, sans-serif";
+        ctx.fillText(subtitle, W / 2, H / 2 + 8);
+
+        if (extra) {
+          ctx.fillStyle = COLORS.score;
+          ctx.font = "700 13px Arial, sans-serif";
+          ctx.fillText(extra, W / 2, H / 2 + 43);
+        }
+
+        ctx.restore();
+      }
+
+      draw() {
+        ctx.fillStyle = COLORS.background;
+        ctx.fillRect(0, 0, W, H);
+
+        // Étoiles.
+        for (const star of this.stars) {
+          const alpha = 0.3 + 0.4 * Math.sin(star.blink + this.visualTick * 0.02);
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0.08, alpha);
+          ctx.fillStyle = COLORS.white;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, Math.max(1, star.r), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Sol et quadrillage.
+        ctx.fillStyle = COLORS.ground;
+        ctx.fillRect(0, GROUND, W, H - GROUND);
+
+        ctx.strokeStyle = COLORS.groundLine;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, GROUND);
+        ctx.lineTo(W, GROUND);
+        ctx.stroke();
+
+        const gridOffset = (this.frame * this.speed * 0.4) % 40;
+        ctx.lineWidth = 1;
+
+        for (let x = -gridOffset; x < W; x += 40) {
+          ctx.beginPath();
+          ctx.moveTo(x, GROUND);
+          ctx.lineTo(x, H);
+          ctx.stroke();
+        }
+
+        // Plateformes et obstacles.
+        for (const platform of this.platforms) drawPlatform(ctx, platform);
+
+        for (const obstacle of this.obstacles) {
+          if (obstacle.type === "spike") {
+            drawSpike(ctx, obstacle);
+          } else {
+            drawBlock(ctx, obstacle);
+          }
+        }
+
+        this.player.draw(ctx);
+
+        for (const particle of this.particles) particle.draw(ctx);
+
+        // Barre de progression et score.
+        const barX = 50;
+        const barY = 18;
+        const barW = W - 100;
+        const barH = 7;
+
+        ctx.fillStyle = COLORS.groundLine;
+        ctx.fillRect(barX, barY, barW, barH);
+
+        const progress = Math.min(this.score / 600, 1);
+        if (progress > 0) {
+          ctx.fillStyle = COLORS.score;
+          ctx.fillRect(barX, barY, barW * progress, barH);
+        }
+
+        ctx.fillStyle = COLORS.white;
+        ctx.font = "700 13px Arial, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(`Score : ${this.score}   Record : ${this.best}`, 10, H - 19);
+
+        ctx.font = "11px Arial, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#8c92ae";
+        ctx.fillText("ESPACE / CLIC = SAUT   ·   P = PAUSE   ·   R = RESTART", W - 9, H - 19);
+
+        if (this.state === "menu") {
+          this.drawOverlay(
+            "GEOMETRY DASH",
+            "Appuie sur ESPACE ou clique pour commencer",
+            COLORS.score,
+            "DOUBLE SAUT · ÉVITE LES OBSTACLES"
+          );
+        } else if (this.state === "paused") {
+          this.drawOverlay(
+            "PAUSE",
+            "Appuie sur P ou Échap pour reprendre",
+            COLORS.white
+          );
+        } else if (this.state === "dead") {
+          this.drawOverlay(
+            "MORT !",
+            `Score : ${this.score}   |   Record : ${this.best}`,
+            COLORS.death,
+            "ESPACE ou clic pour recommencer"
+          );
+        }
+      }
+    }
+
+    const game = new Game();
+
+    // Boutons de la page.
+    ui.start.addEventListener("click", () => {
+      if (game.state === "paused") {
+        game.togglePause();
+      } else if (game.state === "playing") {
+        game.action();
+      } else {
+        game.start();
+      }
+    });
+
+    ui.pause.addEventListener("click", () => game.togglePause());
+
+    document.querySelector("#restartButton").addEventListener("click", () => {
+      game.start();
+      canvas.focus({ preventScroll: true });
+    });
+
+    // Clic ou toucher sur la zone de jeu.
+    canvas.addEventListener("pointerdown", event => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      canvas.focus({ preventScroll: true });
+      game.action();
+    });
+
+    // Commandes clavier. Échap met le jeu en pause au lieu de fermer la page.
+    window.addEventListener("keydown", event => {
+      const target = event.target;
+      const isInteractive = target.closest(
+        "button, a, input, textarea, select, [contenteditable='true']"
+      );
+
+      if (isInteractive) return;
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (!event.repeat) game.action();
+      } else if (event.key.toLowerCase() === "r") {
+        game.start();
+      } else if (event.key.toLowerCase() === "p" || event.key === "Escape") {
+        game.togglePause();
+      }
+    });
+
+    // Menu mobile.
+    const menuToggle = document.querySelector("#menuToggle");
+    const navMenu = document.querySelector("#navMenu");
+
+    menuToggle.addEventListener("click", () => {
+      const isOpen = navMenu.classList.toggle("is-open");
+      menuToggle.setAttribute("aria-expanded", String(isOpen));
+      menuToggle.setAttribute("aria-label", isOpen ? "Fermer le menu" : "Ouvrir le menu");
+      menuToggle.textContent = isOpen ? "×" : "☰";
+    });
+
+    navMenu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        navMenu.classList.remove("is-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.setAttribute("aria-label", "Ouvrir le menu");
+        menuToggle.textContent = "☰";
+      });
+    });
+
+    // Boucle de jeu à 60 images par seconde, même si l'écran a un autre taux de rafraîchissement.
+    let previousTime = 0;
+    let accumulator = 0;
+
+    function gameLoop(timestamp) {
+      if (!previousTime) previousTime = timestamp;
+
+      const delta = Math.min(timestamp - previousTime, 100);
+      previousTime = timestamp;
+      accumulator += delta;
+      game.visualTick += delta / FRAME_MS;
+
+      while (accumulator >= FRAME_MS) {
+        game.update();
+        accumulator -= FRAME_MS;
+      }
+
+      game.draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
